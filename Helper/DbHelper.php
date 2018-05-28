@@ -65,6 +65,16 @@ class DbHelper extends AbstractHelper
     }
     
     /**
+     * Do a simple write operation
+     * @param string $sql
+     */
+    public function sqlWrite(string $sql)
+    {
+        $connection = $this->resource->getConnection('core_write');
+        $results = $connection->query($sql);
+    }
+    
+    /**
      * Fetches Id of Entity Type from "eav_entity_type"
      * @param string $code
      * @return int

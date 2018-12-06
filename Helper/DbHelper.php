@@ -163,4 +163,17 @@ class DbHelper extends AbstractHelper
         
         return $value;
     }
+    
+    public function getAllStores() : array
+    {
+        $tableName = $this->getTableName('store');
+        $sql = "SELECT * FROM `".$tableName."` "
+            . "ORDER BY `store_id`";
+        echo $sql;
+        $arrRows = $this->sqlRead($sql);
+        if (!is_array($arrRows)) {
+            return [];
+        }
+        return $arrRows;
+    }
 }

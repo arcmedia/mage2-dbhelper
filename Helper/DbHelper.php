@@ -18,7 +18,9 @@ class DbHelper extends AbstractHelper
     protected $entityTypeCustomerId = null;
     protected $entityTypeAddressId = null;
     protected $attributeIds = [];
-    
+
+    protected $eavAttributes = [];
+
     public function __construct(
         Context $context,
         Monolog $logger,
@@ -72,6 +74,12 @@ class DbHelper extends AbstractHelper
     {
         $connection = $this->resource->getConnection('core_write');
         $results = $connection->query($sql);
+
+        if ($results) {
+            return $connection->lastInsertId();
+        } else {
+            return false;
+        }
     }
     
     /**
@@ -175,5 +183,122 @@ class DbHelper extends AbstractHelper
             return [];
         }
         return $arrRows;
+    }
+
+    /**
+     * Fetches all Product related EAV Attributes
+     * @return array
+     */
+    public function getAllEavAttributes()
+    {
+        if (count($this->eavAttributes) > 0) {
+            return $this->eavAttributes;
+        }
+
+        $entityTypeId = $this->getEntityTypeId('catalog_product');
+        $tableName = $this->getTableName('eav_attribute');
+
+        $sql = "SELECT `attribute_id`, `attribute_code`, `backend_type`, `backend_model`, `frontend_input` "
+            . "FROM `".$tableName."` "
+            . "WHERE `entity_type_id` = '".$entityTypeId."'";
+
+        $result = $this->sqlRead($sql);
+
+        $arrReturn = [];
+        foreach ($result as $arrEntry){
+            $arrReturn[$arrEntry['attribute_code']] = $arrEntry;
+        }
+        $this->eavAttributes = $arrReturn;
+
+        return $arrReturn;
+    }
+
+    public function getTaxId($country, $code) : int
+    {
+        $table = $this->getTableName('tax_calculation_rate');
+
+        $sql = "SELECT `tax_calculation_rate_id` FROM `".$table."` "
+            . "WHERE `tax_country_id` = '".$country."' "
+            . "AND `code` = '".$code."' "
+            . "LIMIT 0,1;";
+
+        $taxId = (int) $this->sqlReadOne($sql);
+        return $taxId;
+    }
+
+    public function getTaxClassId($code) : string
+    {
+        $table = $this->getTableName('tax_class');
+
+        $sql = "SELECT `class_id` FROM `".$table."` "
+            . "WHERE `class_name` = '".$code."' "
+            . "AND `class_type` = 'PRODUCT' "
+            . "LIMIT 0,1;";
+
+        $taxClassId = (int) $this->sqlReadOne($sql);
+        return $taxClassId;
+    }
+
+    public function setTax($country, $value)
+    {
+        $code = $country.'-'.$value;
+        $table = $this->getTableName('tax_calculation_rate');
+        $sql = "INSERT INTO `".$table."` "
+            . "(`tax_country_id`, `tax_region_id`, `tax_postcode`, `code`, `rate`) "
+            . "VALUES "
+            . "('".$country."','0','*','".$code."','".$value."');";
+
+        $taxRateId  = $this->sqlWrite($sql);
+        $taxClassId = $this->setTaxClass($code);
+        $taxRuleId  = $this->setTaxRule($code);
+
+        $this->setTaxCalculation($taxRateId, $taxRuleId, $taxClassId);
+    }
+
+    protected function setTaxClass(string $code)
+    {
+        $table = $this->getTableName('tax_class');
+
+        $sql = "INSERT INTO `".$table."` "
+            . "(`class_name`, `class_type`) "
+            . "VALUES "
+            . "('".$code."','PRODUCT');";
+        return $this->sqlWrite($sql);
+    }
+
+    protected function setTaxRule(string $code)
+    {
+        $table = $this->getTableName('tax_calculation_rule');
+
+        $sql = "INSERT INTO `".$table."` "
+            . "(`code`, `priority`, `position`, `calculate_subtotal`) "
+            . "VALUES "
+            . "('".$code."','1','1','0');";
+        return $this->sqlWrite($sql);
+    }
+
+    protected function setTaxCalculation($taxRateId, $taxRuleId, $taxClassId)
+    {
+        $table = $this->getTableName('tax_calculation');
+
+        $sql = "INSERT INTO `".$table."` "
+            . "(`tax_calculation_rate_id`, `tax_calculation_rule_id`, `customer_tax_class_id`, `product_tax_class_id`) "
+            . "VALUES "
+            . "('".$taxRateId."','".$taxRuleId."','3','".$taxClassId."');";
+        $this->sqlWrite($sql);
+    }
+
+
+    public function loadExistingAttributeSets()
+    {
+        $tableName = $this->getTableName('eav_attribute_set');
+
+        //Now load existing Attribute sets
+        $entityTypeId = $this->getEntityTypeId('catalog_product');
+        $sql = "SELECT * FROM `".$tableName."` "
+            . "WHERE `entity_type_id` = '".$entityTypeId."' "
+            . "ORDER BY `attribute_set_id` ASC;";
+        $existingSets = $this->sqlRead($sql);
+        return $existingSets;
     }
 }

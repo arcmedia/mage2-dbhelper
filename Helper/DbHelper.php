@@ -249,7 +249,10 @@ class DbHelper extends AbstractHelper
             . "('".$country."','0','*','".$code."','".$value."');";
 
         $taxRateId  = $this->sqlWrite($sql);
-        $taxClassId = $this->setTaxClass($code);
+        $taxClassId = $this->getTaxClassId($code);
+        if (!$taxClassId) {
+            $taxClassId = $this->setTaxClass($code);
+        }
         $taxRuleId  = $this->setTaxRule($code);
 
         $this->setTaxCalculation($taxRateId, $taxRuleId, $taxClassId);

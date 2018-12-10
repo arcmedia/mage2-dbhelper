@@ -2,7 +2,7 @@
     "name": "arcmedia/mage2-dbhelper",
     "description": "Methods to get Data from the Magento DB faster",
     "type": "magento2-module",
-    "version": "0.1.3",
+    "version": "0.1.5",
     "license": [
         "MIT"
     ],

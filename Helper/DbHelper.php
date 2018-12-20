@@ -177,7 +177,7 @@ class DbHelper extends AbstractHelper
         $tableName = $this->getTableName('store');
         $sql = "SELECT * FROM `".$tableName."` "
             . "ORDER BY `store_id`";
-        echo $sql;
+
         $arrRows = $this->sqlRead($sql);
         if (!is_array($arrRows)) {
             return [];
@@ -291,6 +291,16 @@ class DbHelper extends AbstractHelper
         $this->sqlWrite($sql);
     }
 
+    public function setProductToCategory($arrCategoryProduct)
+    {
+        $table = $this->getTableName('catalog_category_product');
+
+        $sql = "INSERT INTO `".$table."` "
+            . "(`category_id`, `product_id`, `position`) "
+            . "VALUES "
+            . implode(", ", $arrCategoryProduct).";";
+        $this->sqlWrite($sql);
+    }
 
     public function loadExistingAttributeSets()
     {

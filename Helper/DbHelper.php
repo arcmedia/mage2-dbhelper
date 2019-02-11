@@ -177,7 +177,7 @@ class DbHelper extends AbstractHelper
         $tableName = $this->getTableName('store');
         $sql = "SELECT * FROM `".$tableName."` "
             . "ORDER BY `store_id`";
-        echo $sql;
+        
         $arrRows = $this->sqlRead($sql);
         if (!is_array($arrRows)) {
             return [];

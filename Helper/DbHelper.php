@@ -302,6 +302,20 @@ class DbHelper extends AbstractHelper
         $this->sqlWrite($sql);
     }
     
+    public function isProductInCategory(int $productId, int $categoryId) : bool
+    {
+        $table = $this->getTableName('catalog_category_product');
+
+        $sql = "SELECT * FROM `".$table."` "
+            . "WHERE `category_id` = '".$categoryId."' "
+                . "AND `product_id` = '".$productId."';";
+        $rows = $this->sqlRead($sql);
+        if (count($rows)) {
+            return true;
+        }
+        return false;
+    }
+    
     public function getCategoryIdByPath($categoryPath, $storeId = 0) 
     {
         $table = $this->getTableName('catalog_category_entity');

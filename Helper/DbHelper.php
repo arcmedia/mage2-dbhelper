@@ -301,6 +301,52 @@ class DbHelper extends AbstractHelper
             . implode(", ", $arrCategoryProduct).";";
         $this->sqlWrite($sql);
     }
+    
+    public function getCategoryIdByPath($categoryPath, $storeId = 0) 
+    {
+        $table = $this->getTableName('catalog_category_entity');
+        $nameTable = $this->getTableName('catalog_category_entity_varchar');
+        $parentId = $this->getDefaultCategoryId($storeId);    
+        $entityTypeId = $this->getEntityTypeId("catalog_category");
+        $nameAttributeId = $this->getEavAttributeId("name", $entityTypeId);
+        $arrParts = explode("/", $categoryPath);
+        foreach ($arrParts as $category) {
+            $sql = "SELECT * FROM `".$table."` WHERE `parent_id` = '".$parentId."' "
+                    . "AND `entity_id` IN (SELECT `entity_id` FROM `".$nameTable."` "
+                        . "WHERE `value` LIKE '".trim($category)."' "
+                    . "AND `attribute_id` = '".$nameAttributeId."' "
+                    . "AND `store_id` = '".$storeId."' "
+                . ");";
+            $arrRows = $this->sqlRead($sql);
+            $row = array_pop($arrRows);
+            if (!isset($row['entity_id'])) {
+                return 0;
+            }
+            $parentId = (int) $row['entity_id'];
+        }
+        return $parentId;
+    }
+    
+    
+    
+    /**
+     * Returns the id of the Default Category
+     * @param int $storeId
+     * @return int
+     */
+    public function getDefaultCategoryId($storeId = 0) : int
+    {
+        $table = $this->getTableName('catalog_category_entity');
+        $sql = "SELECT * FROM `".$table."` "
+                . "WHERE `parent_id` IN "
+                . "(SELECT `entity_id` FROM `".$table."` WHERE `parent_id` = '0');";
+        $arrRows = $this->sqlRead($sql);
+        $row = array_pop($arrRows);
+        if (isset($row['entity_id'])) {
+            return (int) $row['entity_id'];
+        }
+        return 0;
+    }
 
     public function loadExistingAttributeSets()
     {

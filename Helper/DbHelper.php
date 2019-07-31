@@ -323,6 +323,16 @@ class DbHelper extends AbstractHelper
         $parentId = $this->getDefaultCategoryId($storeId);    
         $entityTypeId = $this->getEntityTypeId("catalog_category");
         $nameAttributeId = $this->getEavAttributeId("name", $entityTypeId);
+
+        $sql = "SELECT * FROM `".$table."` WHERE `path` = '".$categoryPath."';";
+        $arrRows = $this->sqlRead($sql);
+        $row = array_pop($arrRows);
+        if (!isset($row['entity_id'])) {
+            return 0;
+        }
+        $parentId = (int) $row['entity_id'];
+
+        /*
         $arrParts = explode("/", $categoryPath);
         foreach ($arrParts as $category) {
             $sql = "SELECT * FROM `".$table."` WHERE `parent_id` = '".$parentId."' "
@@ -338,6 +348,8 @@ class DbHelper extends AbstractHelper
             }
             $parentId = (int) $row['entity_id'];
         }
+        */
+
         return $parentId;
     }
     

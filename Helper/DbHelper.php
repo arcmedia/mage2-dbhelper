@@ -51,7 +51,7 @@ class DbHelper extends AbstractHelper
     {
         $connection = $this->resource->getConnection('core_read');
         $results = $connection->fetchAll($sql);
-        return $results;
+        return (array) $results;
     }
     
     /**
@@ -63,7 +63,7 @@ class DbHelper extends AbstractHelper
     {
         $connection = $this->resource->getConnection('core_read');
         $results = $connection->fetchOne($sql);
-        return $results;
+        return (string) $results;
     }
     
     /**
@@ -117,7 +117,7 @@ class DbHelper extends AbstractHelper
     public function getProductAttributeId(string $code) : int
     {
         $entityTypeId = $this->getEntityTypeId("catalog_product");
-        return $this->getEavAttributeId($code, $entityTypeId);
+        return (int) $this->getEavAttributeId($code, $entityTypeId);
     }
     
     /**
@@ -128,7 +128,7 @@ class DbHelper extends AbstractHelper
     public function getCustomerAttributeId(string $code) : int
     {
         $entityTypeId = $this->getEntityTypeId("customer");
-        return $this->getEavAttributeId($code, $entityTypeId);
+        return (int) $this->getEavAttributeId($code, $entityTypeId);
     }
     
     /**
@@ -139,7 +139,7 @@ class DbHelper extends AbstractHelper
     public function getAddressAttributeId(string $code) : int
     {
         $entityTypeId = $this->getEntityTypeId("customer_address");
-        return $this->getEavAttributeId($code, $entityTypeId);
+        return (int) $this->getEavAttributeId($code, $entityTypeId);
     }
     
     /**
@@ -169,7 +169,7 @@ class DbHelper extends AbstractHelper
         }
         $value = $this->sqlReadOne($sql);
         
-        return $value;
+        return (string) $value;
     }
     
     public function getAllStores() : array
@@ -182,7 +182,7 @@ class DbHelper extends AbstractHelper
         if (!is_array($arrRows)) {
             return [];
         }
-        return $arrRows;
+        return (array) $arrRows;
     }
 
     /**

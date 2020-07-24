@@ -316,8 +316,9 @@ class DbHelper extends AbstractHelper
         return false;
     }
     
-    public function getCategoryIdByPath($categoryPath, $storeId = 0) 
+    public function getCategoryIdsByPath(string $categoryPath, int $storeId = 0) : array
     {
+        $arrIds = [];
         $table = $this->getTableName('catalog_category_entity');
         $nameTable = $this->getTableName('catalog_category_entity_varchar');
         $parentId = $this->getDefaultCategoryId($storeId);    
@@ -333,12 +334,18 @@ class DbHelper extends AbstractHelper
                 . ");";
             $arrRows = $this->sqlRead($sql);
             $row = array_pop($arrRows);
-            if (!isset($row['entity_id'])) {
-                return 0;
+            if (isset($row['entity_id'])) {
+                $arrIds[] = (int) $row['entity_id'];
+                $parentId = (int) $row['entity_id'];
             }
-            $parentId = (int) $row['entity_id'];
         }
-        return $parentId;
+        return $arrIds;
+    }
+    
+    public function getCategoryIdByPath(string $categoryPath, int $storeId = 0) : int
+    {
+        $arrIds = $this->getCategoryIdsByPath($categoryPath, $storeId);
+        return (int) array_pop($arrIds);
     }
     
     
@@ -348,18 +355,15 @@ class DbHelper extends AbstractHelper
      * @param int $storeId
      * @return int
      */
-    public function getDefaultCategoryId($storeId = 0) : int
+    public function getDefaultCategoryId(int $storeId = 0) : int
     {
-        $table = $this->getTableName('catalog_category_entity');
-        $sql = "SELECT * FROM `".$table."` "
-                . "WHERE `parent_id` IN "
-                . "(SELECT `entity_id` FROM `".$table."` WHERE `parent_id` = '0');";
-        $arrRows = $this->sqlRead($sql);
-        $row = array_pop($arrRows);
-        if (isset($row['entity_id'])) {
-            return (int) $row['entity_id'];
-        }
-        return 0;
+        $tableStore = $this->getTableName('store');
+        $sqlStore = "SELECT `group_id` FROM `".$tableStore."` WHERE `store_id` = '".$storeId."';";
+        $groupId = $this->sqlReadOne($sqlStore);
+        $tableGroup = $this->getTableName('store_group');
+        $sqlGroup = "SELECT `root_category_id` FROM `".$tableGroup."` WHERE `group_id` = '".$groupId."';";
+        $rootId = $this->sqlReadOne($sqlGroup);
+        return (int) $rootId;
     }
 
     public function loadExistingAttributeSets()

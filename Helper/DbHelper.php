@@ -321,7 +321,7 @@ class DbHelper extends AbstractHelper
         $arrIds = [];
         $table = $this->getTableName('catalog_category_entity');
         $nameTable = $this->getTableName('catalog_category_entity_varchar');
-        $parentId = $this->getDefaultCategoryId($storeId);    
+        $parentId = $this->getDefaultCategoryId(1);
         $entityTypeId = $this->getEntityTypeId("catalog_category");
         $nameAttributeId = $this->getEavAttributeId("name", $entityTypeId);
         $arrParts = explode("/", $categoryPath);

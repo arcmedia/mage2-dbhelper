@@ -3,11 +3,23 @@ namespace Arcmedia\DbHelper\Test\Unit\Helper;
 
 use Arcmedia\DbHelper\Helper\DbHelper;
 use Magento\Framework\TestFramework\Unit\Helper\ObjectManager;
-use PHPUnit_Framework_TestCase as TestCase;
+use PHPUnit\Framework\TestCase as TestCase;
+//use PHPUnit\DbUnit\TestCaseTrait;
 
 class DbHelperTest extends TestCase 
 {
-    public function __construct(){
+    //use TestCaseTrait; 
+    
+    /**
+     * @return PHPUnit_Extensions_Database_DB_IDatabaseConnection
+     */
+    public function getConnection()
+    {
+        $pdo = new PDO('sqlite::memory:');
+        return $this->createDefaultDBConnection($pdo, ':memory:');
+    }
+    
+    public function setUp(){
         $this->objectManager = new ObjectManager($this);
     }
     
@@ -65,13 +77,17 @@ class DbHelperTest extends TestCase
         return $m;
     }
     
-    public function testProductRead() 
+    public function testSqlEscape() 
     {
         //$objectManager = ObjectManager::getInstance();
         $objectManager = $this->objectManager;
         $helper = $objectManager->getObject('Arcmedia\DbHelper\Helper\DbHelper');
         
-        $entityTypeId = $helper->getEntityTypeId('catalog_product');
-        $this->assertEquals(5, $entityTypeId);
+        $str1 = "Hermann's Inn";
+        $str2 = "rue du pont\" de lac";
+        $this->assertEquals("Hermann\'s Inn", $helper->sqlEscape($str1));
+        $this->assertEquals("rue du pont\\\" de lac", $helper->sqlEscape($str2));
+        //$entityTypeId = $helper->getEntityTypeId('catalog_product');
+        //$this->assertEquals(5, $entityTypeId);
     }
 }

@@ -82,6 +82,13 @@ class DbHelper extends AbstractHelper
         }
     }
     
+    public function sqlEscape(string $input) : string 
+    {
+        $connection = $this->resource->getConnection('core_write');
+        $ouput = $connection->quote($input);
+        return $ouput;
+    }
+    
     /**
      * Fetches Id of Entity Type from "eav_entity_type"
      * @param string $code

@@ -233,7 +233,24 @@ class DbHelper extends AbstractHelper
         return $taxId;
     }
 
-    public function getTaxClassId($code) : string
+    public function getCustomerTaxClassId($code = "Retail Customer") : int
+    {
+        $table = $this->getTableName('tax_class');
+
+        $sql = "SELECT `class_id` FROM `".$table."` "
+            . "WHERE `class_name` = '".$code."' "
+            . "AND `class_type` = 'CUSTOMER' "
+            . "LIMIT 0,1;";
+
+        $customerTaxClassId = (int) $this->sqlReadOne($sql);
+        if (!$customerTaxClassId) {
+            $customerTaxClassId = $this->setCustomerTaxClass($code);
+        }
+
+        return $customerTaxClassId;
+    }
+
+    public function getTaxClassId($code) : int
     {
         $table = $this->getTableName('tax_class');
 
@@ -265,6 +282,17 @@ class DbHelper extends AbstractHelper
         $this->setTaxCalculation($taxRateId, $taxRuleId, $taxClassId);
     }
 
+    protected function setCustomerTaxClass(string $code)
+    {
+        $table = $this->getTableName('tax_class');
+
+        $sql = "INSERT INTO `".$table."` "
+            . "(`class_name`, `class_type`) "
+            . "VALUES "
+            . "('".$code."','CUSTOMER');";
+        return $this->sqlWrite($sql);
+    }
+
     protected function setTaxClass(string $code)
     {
         $table = $this->getTableName('tax_class');
@@ -291,10 +319,11 @@ class DbHelper extends AbstractHelper
     {
         $table = $this->getTableName('tax_calculation');
 
+        $customerTaxClassId = $this->getCustomerTaxClassId();
         $sql = "INSERT INTO `".$table."` "
             . "(`tax_calculation_rate_id`, `tax_calculation_rule_id`, `customer_tax_class_id`, `product_tax_class_id`) "
             . "VALUES "
-            . "('".$taxRateId."','".$taxRuleId."','3','".$taxClassId."');";
+            . "('".$taxRateId."','".$taxRuleId."','.$customerTaxClassId.','".$taxClassId."');";
         $this->sqlWrite($sql);
     }
 

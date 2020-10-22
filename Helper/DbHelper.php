@@ -82,7 +82,7 @@ class DbHelper extends AbstractHelper
         }
     }
     
-    public function sqlEscape(string $input) : string 
+    public function sqlEscape($input) : string 
     {
         $connection = $this->resource->getConnection('core_write');
         $ouput = $connection->quote($input);

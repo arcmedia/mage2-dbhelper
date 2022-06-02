@@ -362,6 +362,7 @@ class DbHelper extends AbstractHelper
         $nameAttributeId = $this->getEavAttributeId("name", $entityTypeId);
         $arrParts = explode("/", $categoryPath);
         foreach ($arrParts as $category) {
+            $categoryName = str_replace("&frasl;", "\/", trim($category)); 
             $sql = "SELECT * FROM `".$table."` WHERE `parent_id` = '".$parentId."' "
                     . "AND `entity_id` IN (SELECT `entity_id` FROM `".$nameTable."` "
                         . "WHERE `value` LIKE '".trim($category)."' "

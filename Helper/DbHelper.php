@@ -163,7 +163,7 @@ class DbHelper extends AbstractHelper
         $storeId = null
     ) : string
     {
-        if (!in_array($attributeType, ['int', 'varchar', 'text', 'datetime'])) {
+        if (!in_array($attributeType, ['int', 'varchar', 'text', 'datetime', 'decimal'])) {
             return "";
         }
         $table = $this->getTableName("catalog_product_entity_".$attributeType);

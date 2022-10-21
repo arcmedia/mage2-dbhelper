@@ -175,6 +175,9 @@ class DbHelper extends AbstractHelper
             $sql .= "AND `store_id` = '".((int) $storeId)."';";
         }
         $value = $this->sqlReadOne($sql);
+        if ((int) $storeId > 0 && !$value && $value !== "0") {
+            return $this->getCustomProductAttribute($productId, $attributeCode, $attributeType, 0);
+        }
         
         return (string) $value;
     }

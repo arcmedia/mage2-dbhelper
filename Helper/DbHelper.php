@@ -14,10 +14,15 @@ class DbHelper extends AbstractHelper
     /** @var Resource $resource **/
     protected $resource;
     
+    protected $debug = 0;
+    
     protected $entityTypeProductId = null;
     protected $entityTypeCustomerId = null;
     protected $entityTypeAddressId = null;
     protected $attributeIds = [];
+    
+    protected $entityTypes = [];
+    protected $eavAttributesWithType = [];
 
     protected $eavAttributes = [];
 
@@ -49,8 +54,15 @@ class DbHelper extends AbstractHelper
      */
     public function sqlRead(string $sql) : array
     {
+        if ($this->debug === 1) {
+            $startTime = time();
+        }
         $connection = $this->resource->getConnection('core_read');
         $results = $connection->fetchAll($sql);
+        if ($this->debug === 1) {
+            echo $sql."\n";
+            echo "sqlRead(): ".date("H:i:s", time()-$startTime)."\n";
+        }
         return (array) $results;
     }
     
@@ -61,8 +73,15 @@ class DbHelper extends AbstractHelper
      */
     public function sqlReadOne(string $sql) : string
     {
+        if ($this->debug === 1) {
+            $startTime = time();
+        }
         $connection = $this->resource->getConnection('core_read');
         $results = $connection->fetchOne($sql);
+        if ($this->debug === 1) {
+            echo $sql."\n";
+            echo "sqlReadOne(): ".date("H:i:s", time()-$startTime)."\n";
+        }
         return (string) $results;
     }
     
@@ -72,9 +91,16 @@ class DbHelper extends AbstractHelper
      */
     public function sqlWrite(string $sql)
     {
+        if ($this->debug === 1) {
+            $startTime = time();
+        }
         $connection = $this->resource->getConnection('core_write');
         $results = $connection->query($sql);
 
+        if ($this->debug === 1) {
+            echo $sql."\n";
+            echo "sqlWrite(): ".date("H:i:s", time()-$startTime)."\n";
+        }
         if ($results) {
             return $connection->lastInsertId();
         } else {
@@ -94,12 +120,18 @@ class DbHelper extends AbstractHelper
      * @param string $code
      * @return int
      */
-    public function getEntityTypeId(string $code) : int
+    public function getEntityTypeId(string $code): int
     {
+        if (isset($this->entityTypes[$code])) {
+            return (int) $this->entityTypes[$code];
+        }
         $table = $this->getTableName("eav_entity_type");
         $sql = "SELECT `entity_type_id` FROM `".$table."` WHERE `entity_type_code` = '".$code."';";
         $entityTypeId = (int) $this->sqlReadOne($sql);
-        return $entityTypeId;
+        if ($entityTypeId > 0) {
+            $this->entityTypes[$code] = $entityTypeId;
+        }
+        return (int) $entityTypeId;
     }
     
     /**
@@ -108,11 +140,18 @@ class DbHelper extends AbstractHelper
      * @param int $entityTypeId
      * @return int
      */
-    public function getEavAttributeId(string $code, int $entityTypeId) : int
+    public function getEavAttributeId(string $code, int $entityTypeId): int
     {
+        if (isset($this->eavAttributesWithType[$entityTypeId][$code])) {
+            return (int) $this->eavAttributesWithType[$entityTypeId][$code];
+        }
         $table = $this->getTableName("eav_attribute");
         $sql = "SELECT `attribute_id` FROM `".$table."` WHERE `attribute_code` = '".$code."' AND `entity_type_id` = '".$entityTypeId."';";
         $attributeId = (int) $this->sqlReadOne($sql);
+        if (!isset($this->eavAttributesWithType[$entityTypeId])) {
+            $this->eavAttributesWithType[$entityTypeId] = [];
+        }
+        $this->eavAttributesWithType[$entityTypeId][$code] = $attributeId;
         return $attributeId;
     }
     
@@ -417,5 +456,33 @@ class DbHelper extends AbstractHelper
             . "ORDER BY `attribute_set_id` ASC;";
         $existingSets = $this->sqlRead($sql);
         return $existingSets;
+    }
+    
+    public function beginTransaction() 
+    {
+        $connection = $this->resource->getConnection('core_write');
+        $connection->beginTransaction();
+    }
+    
+    public function commitTransaction() 
+    {
+        $connection = $this->resource->getConnection('core_write');
+        $connection->commit();
+    }
+    
+    public function rollbackTransaction() 
+    {
+        $connection = $this->resource->getConnection('core_write');
+        $connection->rollback();
+    }
+    
+    /**
+     * Do a simple write operation
+     * @param string $sql
+     */
+    public function sqlWriteTransaction(string $sql)
+    {
+        $connection = $this->resource->getConnection('core_write');
+        $connection->query($sql);
     }
 }

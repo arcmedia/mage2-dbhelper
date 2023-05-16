@@ -96,11 +96,22 @@ class DbHelper extends AbstractHelper
         }
         $connection = $this->resource->getConnection('core_write');
         $results = $connection->query($sql);
-
+        
         if ($this->debug === 1) {
             echo $sql."\n";
             echo "sqlWrite(): ".date("H:i:s", time()-$startTime)."\n";
         }
+        if ($results) {
+            return $connection->lastInsertId();
+        } else {
+            return false;
+        }
+    }
+    
+    public function sqlWriteArray(string $tableName, array $data) 
+    {
+        $connection = $this->resource->getConnection('core_write');
+        $results = $connection->insert($tableName, $data);
         if ($results) {
             return $connection->lastInsertId();
         } else {

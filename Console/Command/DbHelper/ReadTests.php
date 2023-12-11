@@ -52,6 +52,8 @@ class ReadTests extends Command
         $output->writeln('Im Internet Kaufbar: '.$imInternetKaufbar);
         $output->writeln('');
         $output->writeln('Generation finished. Full elapsed time: ' . round(microtime(true) - $fulltime, 2) . 's' . "\n");
+        
+        return 0;
     }
 
 }

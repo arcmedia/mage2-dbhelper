@@ -10,17 +10,17 @@ class DbHelper extends AbstractHelper
 {
     /** @var Monolog $logger **/
     public $logger;
-    
+
     /** @var Resource $resource **/
     protected $resource;
-    
+
     protected $debug = 0;
-    
+
     protected $entityTypeProductId = null;
     protected $entityTypeCustomerId = null;
     protected $entityTypeAddressId = null;
     protected $attributeIds = [];
-    
+
     protected $entityTypes = [];
     protected $eavAttributesWithType = [];
 
@@ -35,7 +35,7 @@ class DbHelper extends AbstractHelper
         $this->logger = $logger;
         $this->resource = $resource;
     }
-    
+
     /**
      * Gets the full Table name, adds prefix if used...
      * @param string $tableName
@@ -46,7 +46,13 @@ class DbHelper extends AbstractHelper
         $this->resource->getConnection('core_read');
         return $this->resource->getTableName($tableName);
     }
-    
+
+    public function isTableExists(string $tableName): bool
+    {
+        $connection = $this->resource->getConnection('core_read');
+        return $connection->isTableExists($tableName);
+    }
+
     /**
      * Use this for read operations on DB
      * @param string $sql
@@ -65,7 +71,7 @@ class DbHelper extends AbstractHelper
         }
         return (array) $results;
     }
-    
+
     /**
      * Use this for read operations on DB returning a single value from one row
      * @param string $sql
@@ -84,7 +90,7 @@ class DbHelper extends AbstractHelper
         }
         return (string) $results;
     }
-    
+
     /**
      * Do a simple write operation
      * @param string $sql
@@ -96,7 +102,7 @@ class DbHelper extends AbstractHelper
         }
         $connection = $this->resource->getConnection('core_write');
         $results = $connection->query($sql);
-        
+
         if ($this->debug === 1) {
             echo $sql."\n";
             echo "sqlWrite(): ".date("H:i:s", time()-$startTime)."\n";
@@ -107,8 +113,8 @@ class DbHelper extends AbstractHelper
             return false;
         }
     }
-    
-    public function sqlWriteArray(string $tableName, array $data) 
+
+    public function sqlWriteArray(string $tableName, array $data)
     {
         $connection = $this->resource->getConnection('core_write');
         $results = $connection->insert($tableName, $data);
@@ -118,14 +124,14 @@ class DbHelper extends AbstractHelper
             return false;
         }
     }
-    
-    public function sqlEscape($input) : string 
+
+    public function sqlEscape($input) : string
     {
         $connection = $this->resource->getConnection('core_write');
         $ouput = $connection->quote($input);
         return $ouput;
     }
-    
+
     /**
      * Fetches Id of Entity Type from "eav_entity_type"
      * @param string $code
@@ -144,7 +150,7 @@ class DbHelper extends AbstractHelper
         }
         return (int) $entityTypeId;
     }
-    
+
     /**
      * Get attribute Id from "eav_attribute"
      * @param string $code
@@ -165,9 +171,9 @@ class DbHelper extends AbstractHelper
         $this->eavAttributesWithType[$entityTypeId][$code] = $attributeId;
         return $attributeId;
     }
-    
+
     /**
-     * Get Attribute id for product 
+     * Get Attribute id for product
      * @param string $code
      * @return int
      */
@@ -176,9 +182,9 @@ class DbHelper extends AbstractHelper
         $entityTypeId = $this->getEntityTypeId("catalog_product");
         return (int) $this->getEavAttributeId($code, $entityTypeId);
     }
-    
+
     /**
-     * 
+     *
      * @param string $code
      * @return int
      */
@@ -187,9 +193,9 @@ class DbHelper extends AbstractHelper
         $entityTypeId = $this->getEntityTypeId("customer");
         return (int) $this->getEavAttributeId($code, $entityTypeId);
     }
-    
+
     /**
-     * 
+     *
      * @param string $code
      * @return int
      */
@@ -198,18 +204,18 @@ class DbHelper extends AbstractHelper
         $entityTypeId = $this->getEntityTypeId("customer_address");
         return (int) $this->getEavAttributeId($code, $entityTypeId);
     }
-    
+
     /**
-     * 
+     *
      * @param int $productId
      * @param string $attributeCode
      * @param string $attributeType int, varchar, text or datetime
      * @return string
      */
     public function getCustomProductAttribute(
-        int $productId, 
-        string $attributeCode, 
-        string $attributeType = "varchar", 
+        int $productId,
+        string $attributeCode,
+        string $attributeType = "varchar",
         $storeId = null
     ) : string
     {
@@ -228,10 +234,10 @@ class DbHelper extends AbstractHelper
         if ((int) $storeId > 0 && !$value && $value !== "0") {
             return $this->getCustomProductAttribute($productId, $attributeCode, $attributeType, 0);
         }
-        
+
         return (string) $value;
     }
-    
+
     public function getAllStores() : array
     {
         $tableName = $this->getTableName('store');
@@ -390,7 +396,7 @@ class DbHelper extends AbstractHelper
             . implode(", ", $arrCategoryProduct).";";
         $this->sqlWrite($sql);
     }
-    
+
     public function isProductInCategory(int $productId, int $categoryId) : bool
     {
         $table = $this->getTableName('catalog_category_product');
@@ -404,7 +410,7 @@ class DbHelper extends AbstractHelper
         }
         return false;
     }
-    
+
     public function getCategoryIdsByPath(string $categoryPath, int $storeId = 0) : array
     {
         $arrIds = [];
@@ -415,7 +421,7 @@ class DbHelper extends AbstractHelper
         $nameAttributeId = $this->getEavAttributeId("name", $entityTypeId);
         $arrParts = explode("/", $categoryPath);
         foreach ($arrParts as $category) {
-            $categoryName = str_replace("&frasl;", "\/", trim($category)); 
+            $categoryName = str_replace("&frasl;", "\/", trim($category));
             $sql = "SELECT * FROM `".$table."` WHERE `parent_id` = '".$parentId."' "
                     . "AND `entity_id` IN (SELECT `entity_id` FROM `".$nameTable."` "
                         . "WHERE `value` LIKE '".trim($category)."' "
@@ -431,15 +437,15 @@ class DbHelper extends AbstractHelper
         }
         return $arrIds;
     }
-    
+
     public function getCategoryIdByPath(string $categoryPath, int $storeId = 0) : int
     {
         $arrIds = $this->getCategoryIdsByPath($categoryPath, $storeId);
         return (int) array_pop($arrIds);
     }
-    
-    
-    
+
+
+
     /**
      * Returns the id of the Default Category
      * @param int $storeId
@@ -468,25 +474,25 @@ class DbHelper extends AbstractHelper
         $existingSets = $this->sqlRead($sql);
         return $existingSets;
     }
-    
-    public function beginTransaction() 
+
+    public function beginTransaction()
     {
         $connection = $this->resource->getConnection('core_write');
         $connection->beginTransaction();
     }
-    
-    public function commitTransaction() 
+
+    public function commitTransaction()
     {
         $connection = $this->resource->getConnection('core_write');
         $connection->commit();
     }
-    
-    public function rollbackTransaction() 
+
+    public function rollbackTransaction()
     {
         $connection = $this->resource->getConnection('core_write');
         $connection->rollback();
     }
-    
+
     /**
      * Do a simple write operation
      * @param string $sql
